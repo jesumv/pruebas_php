@@ -1,0 +1,127 @@
+/*estilos generales*/
+#botoncent{
+	margin:auto;
+	width:30%;
+}
+.button {
+	margin-right: 15px;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 8px;
+    transition-duration: 0.4s;
+}
+
+.a{background-color: #4CAF50; /* Green */display: inline;}
+.b{background-color: #ff0000; /* red */display: inline;}
+.c{background-color: #8080ff; /* blue */display: inline;}
+.cent{background-color: #4CAF50; /* Green */display: block; margin:auto;}
+
+.button:hover {
+    background-color: #c0c0c0; /* Green */
+}
+
+/*estilos para input dentro de dialogo*/
+.cajal {
+	width: 80%;
+	font-size: 115%;
+}
+.cajam {
+	width: 28%;
+	font-size: 115%;
+}
+.cajac {
+	width: 20%;
+	font-size: 115%;
+}
+.cajalfc{
+	width: 80%;
+	font-size: 75%;
+}
+.celda{
+	background-color:#808080;
+}
+.celda:hover {
+    background-color:#80ffff;
+    
+}
+
+
+.cajaml{
+	width:200px;
+	font-size: 115%;
+}
+.celda .pagada{
+	background-color:#008040;
+}
+
+.titulo{
+	width: 80%;
+	font-size: 150%;
+	background-color:#008040;
+	margin-left:auto;margin-right:auto;margin-top:10px; margin-bottom:10px; 
+	color:#ccc;
+	text-align:center;
+}
+.subt{
+	margin:auto;
+	width: 80%;
+	border-style: dotted;
+	text-align: center;
+}
+/*estilos para las tablas*/
+
+table.db-table 		{ border-right:1px solid #ccc; border-bottom:1px solid #ccc; 
+margin-left:auto;margin-right:auto;margin-top:50px; margin-bottom:auto; }
+
+table.db-table2 {border-right:1px solid #ccc; border-bottom:1px solid #ccc; 
+margin-left:auto;margin-right:auto;margin-top:50px; margin-bottom:auto; width:80%; }
+
+table.db-table th	{ background:#eee; padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; }
+table.db-table td { padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; }
+
+table.db-table2 th	{ background:#eee; padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; }
+table.db-table2 td	{ padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; }
+
+
+.ed,.el{text-align:center}
+
+.edac{
+text-align:center;
+background-color:#80ff80;
+}
+
+.ocult{display:none;}
+
+/*estilos para tabs */
+div.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+div.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+div.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+

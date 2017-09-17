@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>PRUEBAS CON XML</title>
+		<script src="js/jquery3/jquery-3.0.0.min.js"></script>
+		<script type="text/javascript">
+		'use strict';
+		(function(){
+			
+			
+			//this will parse XML file and output it to website
+			function parseFile(text) {
+					var xmlDoc = $.parseXML(text);
+					 var emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0].attributes;
+					 var rfc = emisor.getNamedItem("rfc").nodeValue;
+					 var nombre = emisor.getNamedItem("nombre").nodeValue;			
+						return [rfc, nombre];
+			};
+			
+			function llenareng(razon,rfc,reng){
+				var rengm = reng+1;
+				var tabla = document.getElementById("lista");
+				var row = tabla.insertRow(rengm);
+				var cell1 = row.insertCell(0);
+				var cell2 = row.insertCell(1);
+				cell1.innerHTML = razon;
+				cell2.innerHTML = rfc; 
+			}
+			
+			function listafacturas(e){
+				var files = e.target.files; // FileList object
+			    // files is a FileList of File objects. List some properties.
+			    for (var i = 0, f; f = files[i]; i++) {
+			    	 var text = "";
+					    var reader = new FileReader();
+					    var onload = function(event) {
+						text = reader.result;
+						var resul = parseFile(text);
+						llenareng(resul[0],resul[1],i);
+			      }
+			      
+			     reader.onload = onload;
+				reader.readAsText(files[i]);
+			    }
+			   
+				};
+				
+				
+				$(document).ready(function(){
+					var evt = document.getElementById('files');
+					evt.addEventListener('change', listafacturas,false);
+				});
+
+		})();
+		</script>
+	</head>
+	<body>
+		<h2>PRUEBAS CON ARCHIVOS XML</h2>
+		<div align="center">
+			<form>
+				<div>
+					<label for="files">Seleccione las facturas</label>
+				</div>
+				<div>
+					<input id="files" name="files[]" type="file" accept=".xml" multiple/>
+				</div>
+	
+			</form>
+		</div>
+		<div id="list">
+		<table id="lista">
+		<tr><th>RAZON SOCIAL</th><th>RFC</th></tr>
+		</table>
+		</div>
+	</body>
+</html>
