@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>LECTURA DE FACTURAS XML</title>
+		<link rel="stylesheet" href= "css/factxml.css" />
+		<script src="js/jquery3/jquery-3.0.0.min.js"></script>
+		<script type="text/javascript">
+		'use strict';
+		(function(){
+		
+			var app=[];		
+			function getver(xmlDoc){
+				var versiona= xmlDoc.getNamedItem("Version")
+				var version
+				if(!versiona)
+				{
+					version = xmlDoc.getNamedItem("version").nodeValue
+				}else{
+					 version = xmlDoc.getNamedItem("Version").nodeValue;
+				}
+				
+				return version
+			}
+			
+			function llenareng(fecha,version,emisor,rfc,conceptos,stotal,descuento,iva=null,timptr,total,narch){
+				//llena un renglon de la tabla
+				var tabla = document.getElementById("lista");
+				var no = document.getElementsByTagName("tr").length;
+				var row;
+				var cell1;
+				var cell2;
+				var cell3;
+				var cell4;
+				var cell5;
+				var cell6;
+				var cell7;
+				var cell8;
+				var cell9;
+				var cell10;
+				var cell11;
+				var cell12;
+				var totm =parseFloat(stotal).toFixed(2);
+				var totm2 =parseFloat(total).toFixed(2);
+				var descm;
+				//verifica si hay descuento
+				if(descuento!=null){descm =parseFloat(descuento).toFixed(2)}else{descm = descuento}
+				var ivam;
+				if(iva!=""){ivam =parseFloat(iva).toFixed(2)}else{ivam="0.00"};
+					row = tabla.insertRow();
+					cell1 = row.insertCell(0);
+					cell2 = row.insertCell(1);
+					cell3 = row.insertCell(2);
+					cell4 = row.insertCell(3);
+					cell5 = row.insertCell(4);
+					cell6 = row.insertCell(5);
+					cell7 = row.insertCell(6);
+					cell8 = row.insertCell(7);
+					cell9 = row.insertCell(8);
+					cell10 = row.insertCell(9);
+					cell11 = row.insertCell(10);
+					cell12 = row.insertCell(11);
+
+					cell1.innerHTML = no;
+					cell2.innerHTML = fecha;
+					cell3.innerHTML = version;
+					cell4.innerHTML = emisor; 
+					cell5.innerHTML = rfc;
+					cell6.innerHTML = conceptos;
+					cell7.innerHTML = totm;
+					cell8.innerHTML = descm;
+					cell9.innerHTML = ivam;
+					cell10.innerHTML = timptr;
+					cell11.innerHTML = totm2;
+					cell12.innerHTML = narch;														
+			};
+			
+			
+			function capiva(version,xdoc){
+				var iva
+				//buscar definiciones de iva
+				var imp = xdoc.getElementsByTagName("cfdi:Impuestos");
+				var totimptr =xdoc.getElementsByTagName("totalImpuestosTrasladados");
+				if(imp.length ==0){
+					iva = 0;
+				}else{
+					var novacio = imp[0].hasChildNodes();
+					if(novacio){
+						//sí hay datos en el nodo impuestos
+						var totalimp = imp[0].attributes;
+						if(totalimp.length!=0){
+							//si existe el atributo de total impuestos
+							iva = totalimp.getNamedItem("totalImpuestosTrasladados").nodeValue;
+						}else{
+							
+							//si no hay total, se busca por nodo
+							//definicion de etiqueta a buscar
+							var etiq;
+							var etiq2;
+							var nomimp;
+							var ntasa;
+							if(version=="3.2"){
+								etiq= "impuesto";
+								etiq2="importe";
+								nomimp="IVA";
+								ntasa ="tasa";
+								}else{
+									etiq= "Impuesto";
+									etiq2="Importe";
+									nomimp = "002"
+									ntasa = "TasaOCuota"
+									}
+							var traslado = xdoc.getElementsByTagName("cfdi:Traslado");
+							for (var i=0; traslado.length; i++){
+								var atribs = traslado[i].attributes;
+								var nomtem = atribs.getNamedItem(etiq).nodeValue
+								if(nomtem == nomimp){
+									var haytasa = atribs.getNamedItem(ntasa);
+									if(haytasa){
+										var tasa = atribs.getNamedItem(ntasa).nodeValue
+										if(tasa.includes("16")){iva = atribs.getNamedItem(etiq2).nodeValue; break;}else{iva="0"; break;}
+										
+									}else{
+										iva="0"; break;
+									}
+										
+									
+									}
+							}
+						}
+						
+					}else{
+						//si no hay datos
+						iva = ""
+					}
+				}
+		
+				return iva;
+			}
+		
+			function getconcep(conceptos){
+				//cuenta los conceptos de la factura
+				var noconcep = conceptos.length;
+				return noconcep;
+			}
+			
+			function extraeiva(traslados){
+				var tras2 = traslados[0].childNodes;
+				var longi= tras2.length;
+				var monto= 0;
+				var otros = false;
+				var impto;
+				for(var i=0; i<longi;i++){
+					impto = tras2[i].attributes["Impuesto"].nodeValue;
+					if(impto == "002"){monto = tras2[i].attributes["Importe"].nodeValue;}
+					if(impto == "003"){otros = true;}
+				}
+				return {monto:monto,
+						otros:otros};
+			}
+			
+			function tieneimp(cfdi){
+				//revisa si hay nodo de impuestos
+				//si no lo hay regresa indicador
+				var tiene;
+				var tienet;
+				var cfdiarr = [].slice.call(cfdi);
+				var tiene = cfdiarr.some(function(element,index,array){return element.nodeName == "cfdi:Impuestos"});
+				if(tiene){
+					//si tiene nodo cfdi impuestos
+					var tiene2 = cfdi[3].attributes;
+					var tiene2arr = [].slice.call(tiene2);
+					tienet = tiene2arr.some(function(element,index,array){return element.nodeName == "Impuesto"});
+					
+					
+				}
+				return tienet;
+			}
+
+			
+			//this will parse XML file and output it to website
+			function leeXML(text,narch) {
+				var xmlDoc
+				try{
+					xmlDoc = $.parseXML(text);
+					var niv1 = xmlDoc.documentElement.childNodes;
+					var tras1 = niv1[3].childNodes;
+					// cfdi impuestos
+					var comprob = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0].attributes;
+					var cfdi = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0].childNodes;
+					var nodospr = xmlDoc.getElementsByTagName("cfdi:Comprobante");
+					var tienei = tieneimp(cfdi);
+					var timptr = 0;
+					var version = getver(comprob);
+					var emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0].attributes;
+					var receptor = xmlDoc.getElementsByTagName("cfdi:Receptor")[0].attributes;
+					var noconcep = xmlDoc.getElementsByTagName("cfdi:Concepto").length;
+					var conceptos =xmlDoc.getElementsByTagName("cfdi:Concepto");
+					var traslados ;
+					var fecha;
+					var imptos;
+					var iva ;
+					var otrosi;
+					var stotal;
+					var descu;
+					var total;
+					var rfc;
+					var nombre;
+					var nombrea;
+					var rfcrecep;
+					if (version == "3.3"){					 
+						 var haydescu = comprob.getNamedItem("Descuento");
+						 //si hay descuento se modifica subtotal
+						 if(haydescu){
+							 descu = comprob.getNamedItem("Descuento").nodeValue;
+							 
+						 }else{
+							 descu = null;
+							
+						 };
+						 //definir el subtotal
+						 fecha= comprob.getNamedItem("Fecha").nodeValue
+						 if(tienei){
+							 imptos = extraeiva(tras1);
+							 otrosi = imptos.otros;
+							 iva = imptos.monto;
+						 }else{iva = 0;
+						 otrosi = 0;
+						 }
+						 
+						 total = comprob.getNamedItem("Total").nodeValue
+						 if(otrosi==true){stotal = Number(total)-Number(iva);}else{stotal = comprob.getNamedItem("SubTotal").nodeValue;	}
+						 rfc = emisor.getNamedItem("Rfc").nodeValue;
+						 nombrea=emisor.getNamedItem("Nombre");
+						 if(nombrea){nombre = nombrea.nodeValue}else{nombre="SIN NOMBRE"};
+						 rfcrecep =receptor.getNamedItem("Rfc").nodeValue;
+
+					}else {
+						try{stotal = comprob.getNamedItem("subTotal").nodeValue;}catch(err){stotal= "ERROR STOTAL"}
+						total = comprob.getNamedItem("total").nodeValue
+						fecha= comprob.getNamedItem("fecha").nodeValue
+						rfc = emisor.getNamedItem("rfc").nodeValue;
+						 nombrea=emisor.getNamedItem("nombre")
+						 
+						 if(nombrea){nombre = nombrea.nodeValue}else{nombre="SIN NOMBRE"};
+						rfcrecep =receptor.getNamedItem("rfc").nodeValue;
+					}
+						llenareng(fecha,version,nombre,rfc,noconcep,stotal,descu,iva,timptr,total,narch)
+
+				}catch(err){
+					fecha = new Date()
+					llenareng(fecha,"ERROR","FORMATO INVALIDO",err,null,null,null,null,null,null,narch)
+				}
+					
+			};
+			
+			
+			
+			function listafacturas(e,callback){
+				//obtiene arreglo de elementos de caja de lista y los lee como xml
+				var files = e.target.files; // FileList object
+				var resul;
+					for (var i=0, f; f=files[i]; i++) {
+				          var r = new FileReader();
+			            		r.onload = (function(f) {
+			                		return function(e) {
+			                			var arch= f.name;
+			                    		var contents = e.target.result;
+			                   		leeXML(contents,arch);
+			                				};
+			           	 		})(f);
+
+			            r.readAsText(f);
+			        } 
+		      	
+				}
+			
+				$(document).ready(function(){
+					var evt = document.getElementById('files');
+					  evt.addEventListener('change', function(e){listafacturas(e,leeXML)},false);
+					  app = {
+							    isLoading: true,
+							    spinner: document.querySelector('.loader'),
+							    container: document.querySelector('.main'),
+							    addDialog: document.querySelector('.dialog-container'),
+							    dmensaje: document.querySelector('.dialog-body')
+							  };
+					// Muestra aviso de acciones
+					  app.toggleAddDialog = function(visible,mensaje=null) {
+					    if (visible) {
+					      app.addDialog.classList.add('dialog-container--visible');
+					      app.dmensaje.innerHTML= mensaje;
+					    } else {
+					      app.addDialog.classList.remove('dialog-container--visible');
+					    }
+					  };
+					  
+					  if (app.isLoading) {
+					      app.spinner.setAttribute('hidden', true);
+					      app.isLoading = false;
+				    }  
+					  
+				});
+
+		})();
+		</script>
+	</head>
+	<body>
+		<h2>LECTURA DE FACTURAS XML</h2>
+			<div align="center">
+				<form>
+					<div>
+						<label for="files">Seleccione las facturas</label>
+					</div>
+					<div>
+						<input id="files" name="files[]" type="file" accept=".xml" multiple/>
+					</div>
+		
+				</form>
+			</div>
+		<div id="list">
+			<table id="lista">
+			<tr><th>NO.</th><th>FECHA</th><th>VERSION</th><th class="rfc">EMISOR</th><th>RFC</th>
+				<th>CONCEPTOS</th><th class="total">SUBTOTAL</th><th>DESCUENTO</th><th>IVA</th>
+				<th>TIMP. TR</th><th>TOTAL</th><th>ARCH</th></tr>
+			</table>
+		</div>
+
+		<!-- dialogo aviso -->
+		<div class="dialog-container">
+			<div class="dialog">
+				<div class="dialog-title" id="titulod">AVISO</div>
+					<div class="dialog-body"></div>
+					<div class="dialog-buttons">
+						<button id="okbut" class="button">OK</button>
+					</div>
+			</div>
+		</div>
+		
+		<div class="loader">
+    			<svg viewBox="0 0 32 32" width="32" height="32">
+      			<circle id="spinner" cx="16" cy="16" r="14" fill="none"></circle>
+    			</svg>
+  		</div>
+  		<footer>
+  		<button id="enviar">Enviar</button>
+  		</footer>
+	</body>
+</html>

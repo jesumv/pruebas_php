@@ -9,48 +9,76 @@
 		'use strict';
 		(function(){
 			
+			function getver(xmlDoc){
+				var version
+				
+				if( xmlDoc.getElementsByTagName("Version").length == 0 )
+				{
+					version = "3.2"
+				}else{
+					 version = comprob.getNamedItem("Version").nodeValue;
+				}
+				
+				return version
+			}
 			
+			function llenareng(listaf){
+				var along = listaf.length;
+				var tabla = document.getElementById("lista");
+				var row;
+				var cell1;
+				var cell2;
+				for(var i=0;i<along;i++){
+					row = tabla.insertRow();
+					cell1 = row.insertCell(0);
+					cell2 = row.insertCell(1);
+					cell1.innerHTML = listaf[i][0];
+					cell2.innerHTML = listaf[i][1];; 
+				};
+				
+			};
 			//this will parse XML file and output it to website
-			function parseFile(text) {
+			function leeXML(text) {
 					var xmlDoc = $.parseXML(text);
-					 var emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0].attributes;
-					 var rfc = emisor.getNamedItem("rfc").nodeValue;
-					 var nombre = emisor.getNamedItem("nombre").nodeValue;			
+					var version = getver(xmlDoc);
+					var emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0].attributes;
+					if (version == "3.3"){
+						 var rfc = emisor.getNamedItem("Rfc").nodeValue;
+						 var nombre = emisor.getNamedItem("Nombre").nodeValue;		
+					}else {
+						var rfc = emisor.getNamedItem("rfc").nodeValue;
+						var nombre = emisor.getNamedItem("nombre").nodeValue;		
+					}
+					 		
 						return [rfc, nombre];
 			};
 			
-			function llenareng(razon,rfc,reng){
-				var rengm = reng+1;
-				var tabla = document.getElementById("lista");
-				var row = tabla.insertRow(rengm);
-				var cell1 = row.insertCell(0);
-				var cell2 = row.insertCell(1);
-				cell1.innerHTML = razon;
-				cell2.innerHTML = rfc; 
-			}
 			
-			function listafacturas(e){
+			
+			function listafacturas(e,callback){
+				var lista = [];
 				var files = e.target.files; // FileList object
-			    // files is a FileList of File objects. List some properties.
-			    for (var i = 0, f; f = files[i]; i++) {
-			    	 var text = "";
-					    var reader = new FileReader();
-					    var onload = function(event) {
+				var resul= [];
+				
+				
+				for (var i = 0; i < files.length; ++ i) {
+				   var text = "";
+				   var reader = new FileReader();
+				   var onload = function(event) {
 						text = reader.result;
-						var resul = parseFile(text);
-						llenareng(resul[0],resul[1],i);
-			      }
-			      
-			     reader.onload = onload;
-				reader.readAsText(files[i]);
-			    }
-			   
-				};
-				
-				
+						resul = leeXML(text);
+		      		}
+				   	reader.onload = onload;
+					reader.readAsText(files[i]);
+					lista.push([resul[0],resul[1]]);
+				}
+
+				llenareng(lista);
+			};
+			
 				$(document).ready(function(){
 					var evt = document.getElementById('files');
-					evt.addEventListener('change', listafacturas,false);
+					evt.addEventListener('change', function(e){listafacturas(e,llenareng(lista))},false);
 				});
 
 		})();

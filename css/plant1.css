@@ -29,18 +29,29 @@
 	width: 80%;
 	font-size: 115%;
 }
+.cajalfc{
+	width: 80%;
+	font-size: 75%;
+}
 .cajam {
 	width: 28%;
 	font-size: 115%;
+}
+
+cajamfc {
+	width: 28%;
+	font-size: 75%;
 }
 .cajac {
 	width: 20%;
 	font-size: 115%;
 }
-.cajalfc{
-	width: 80%;
+cajacfc {
+	width: 28%;
 	font-size: 75%;
 }
+
+
 .celda{
 	background-color:#808080;
 }

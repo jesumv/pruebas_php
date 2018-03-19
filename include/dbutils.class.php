@@ -38,6 +38,23 @@
 	   }
 
 		
-        	
+	   public function checalogin($mysqli){
+	       //***checa si el cliente esta registrado ***/
+	       //obtiene el path absoluto
+	       session_start();
+	       
+	       $user_check=$_SESSION['usuario'];
+	       
+	       $ses_sql=mysqli_query($mysqli,"select username from usuarios where username='$user_check'");
+	       $row=mysqli_fetch_array($ses_sql);
+	       
+	       $login_session=$row['username'];
+	       
+	       if(!isset($login_session))
+	       {
+	           header("Location:/pruebas_php/logout.php");
+	           
+	       }
+	   }
 	}/*** fin de la clase ***/
 	

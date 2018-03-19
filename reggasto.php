@@ -3,13 +3,14 @@
 	  require('include/' . strtolower($class) . '.class.php');
     }
     
-
+//funciones auxiliares
+require 'include/funciones.php';
     $funcbase = new dbutils;
 /*** conexion a bd ***/
     $mysqli = $funcbase->conecta();
     if (is_object($mysqli)) {
-        /*** checa login***/
-        $funcbase->checalogin($mysqli);
+/*** checa login***/
+       $funcbase->checalogin($mysqli);
     } else {
         //die ("<h1>'No se establecio la conexion a bd'</h1>");
     }
@@ -31,16 +32,8 @@ $query= mysqli_query($mysqli, $consulta) or die ("ERROR EN CONSULTA ULTIMOS MOVT
 		echo "</table></DIV>";
 }
 
-
-function consultagasto($mysqli){
-	//esta funcion lista los gastos del mes corriente
-	$fechainic = $_SESSION['fechainic'];
-	$fechainict = date("F");
-						
-	echo "<h3> Gastos del mes de ".$fechainict."</h3>";
-}
 function saldobanco($mysqli){
-	//esta funcion presenta el saldo de bancos y de caja
+	//esta funcion presenta el saldo de bancos
 	$consulta1=$mysqli->query("SELECT SUM(CASE WHEN cuenta='102.01' THEN debe ELSE 0 END)FROM DIARIO");
 	$debe=$consulta1->fetch_row();
 	$rdebe=$debe[0];
@@ -79,23 +72,24 @@ function saldobanco($mysqli){
    <link rel="shortcut icon" href="img/logomin.gif" />  
    <link rel="apple-touch-icon" href="img/logomin.gif">
    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+   
    <script>
-   'use strict';
+   	'use strict';
    	(function() {
-
+   		
    		 $(document).ready(function() {
-   		 		var app = {
+   		 	var app = {
 			    isLoading: true,
 			    spinner: document.querySelector('.loader'),
 			    container: document.querySelector('.main'),
 			    addDialog: document.querySelector('#dialogog'),
 			    addDialog2:document.querySelector('#dialogot'),
 			  };
-	  /*****************************************************************************
-	   *
-	   * Metodos para actualizar/refrescar la IU
-	   *
-	   ****************************************************************************/  
+			  /*****************************************************************************
+		   *
+		   * Metodos para actualizar/refrescar la IU
+		   *
+		   ****************************************************************************/  
 		   // Toggles the visibility of dialog.	  	 
 			  app.toggleAddDialog = function(visible) {
 			    if (visible) {
@@ -105,7 +99,7 @@ function saldobanco($mysqli){
 			    }
 			  }; 
 			  
-			app.toggleAddDialog2 = function(visible) {
+			  app.toggleAddDialog2 = function(visible) {
 			    if (visible) {
 			      app.addDialog2.classList.add('dialog-container--visible');
 			    } else {
@@ -113,14 +107,13 @@ function saldobanco($mysqli){
 			    }
 			  };
 			  
-			  
-			  if (app.isLoading) {
+			  	   
+			    if (app.isLoading) {
 							      app.spinner.setAttribute('hidden', true);
 							      app.container.removeAttribute('hidden');
 							      app.isLoading = false;
 						    }
-						    
-		//metodos de los elementos de la pagina
+			//metodos de los elementos de la pagina
 			
 			function valida(elemen){
 		   		var fecha=document.getElementById(elemen).value;
@@ -132,13 +125,6 @@ function saldobanco($mysqli){
    				app.toggleAddDialog(true)
    				document.getElementById('fgas').focus();
    			}
-			
-			function muestrat(){
-   				app.toggleAddDialog2(true)
-   				document.getElementById('ftras').focus();
-   			}
-   			
-   			
    			function cancela(){
    				app.toggleAddDialog(false)
    				document.getElementById('avisor').innerHTML="";
@@ -151,7 +137,12 @@ function saldobanco($mysqli){
    				document.getElementById('rtraspaso').reset();
    			}
    			
-   			   	function enviagas(){
+   			function muestrat(){
+   				app.toggleAddDialog2(true)
+   				document.getElementById('ftras').focus();
+   			}
+   				 			
+   			function enviagas(){
    				//envio de gasto a la base de datos
    				//recoleccion de variables
    				var fecha = document.getElementById('fgas').value;
@@ -193,8 +184,7 @@ function saldobanco($mysqli){
    				
    			}
    			
-   			
-   			  function enviatras(){
+   			function enviatras(){
    				//envio de traspaso a la base de datos
    				//recoleccion de variables
    				var fecha = document.getElementById('ftras').value;
@@ -227,8 +217,6 @@ function saldobanco($mysqli){
 	    							document.write("ERROR EN REGISTRO");
 								});	
    			}
-   			
-   			
    			function regg(){
    				//funcion al apretar el boton de registrar gasto
    				var aqui= document.getElementById('avisor');
@@ -244,8 +232,6 @@ function saldobanco($mysqli){
    					
    				}
    			}
-   			
-   			
    			function regt(){
    				//al accionar boton de enviar traspaso
    				var aqui= document.getElementById('avisort');
@@ -284,30 +270,11 @@ function saldobanco($mysqli){
    				var cuenta = document.getElementById("cuenta");
    				var elec = document.getElementById("smpago").value;
    				if(elec==28){
-   					cuenta.value='2648';
+   					cuenta.value='8145';
    				}
    				cuenta.focus();
    			}
-   			
-   			function abrearch(){
-   				 //abre xml y lo parsea
-   				var xmlhttp = new XMLHttpRequest();
-  				xmlhttp.onreadystatechange = function() {
-    			if (this.readyState == 4 && this.status == 200) {
-      			myFunction(this);
-    			}
-  				};
-  				xmlhttp.open("GET", "cd_catalog.xml", true);
-  				xmlhttp.send();
-   				
-   			}
-   			
-   			function leexml(){
-   				//lee variables de xml y las añade a la forma de registro
-   				var nombrearch = document.getElementById("arch").innerHTML
-   			}
-   						    
-	//escuchas
+   			//escuchas
    			//boton gasto
 			document.getElementById("botonp").addEventListener('click',muestrad,false)
 			//boton traspaso
@@ -326,14 +293,10 @@ function saldobanco($mysqli){
 			document.getElementById("ivag").addEventListener('change',calctotal,false)
 			//metodo de pago
 			document.getElementById("smpago").addEventListener('change',cuentasi,false)
-			//tab por defecto
-			document.getElementById("defaultOpen").click();
-			//eleccion de archivo xml
-			document.getElementById("arch").addEventListener('change',abrearch,false)
-		});
-		
+   		 });
    	})();
    </script>
+   <script src="js/fauxcx.js"></script>
 </head>
 	<body>
 	    <header class="header">
@@ -359,32 +322,11 @@ function saldobanco($mysqli){
 				  </div>
 				  <br />
 				   <?php
-				  		saldobanco($mysqli);
+				   saldobanco($mysqli);
+				  	consultad($mysqli);
 				  ?>
-				  
-				  <div class="tab">
-					  <button class="tablinks" id="defaultOpen" onclick="abreTab(event,'diario')">Lista Diario</button>
-					  <button class="tablinks" onclick="abreTab(event,'gastos')">Gastos</button>
-					  <button class="tablinks" onclick="abreTab(event,'resultados')">Resultados</button>
-				</div> 
-				  
-				  <div id="diario" class="tabcontent">
-					<?php
-				  		consultad($mysqli);
-				  	?>
-				 </div>
-				 <div id="gastos" class="tabcontent">
-					<?php
-				  		consultagasto($mysqli);
-				  	?>
-				</div>
-				 <div id="resultados" class="tabcontent">
-					  <h3>Resultados</h3>
-					  <p>London is the capital city of England.</p>
-				</div>
-				
 		 </main>
-		 <!-- caja dialogo registro gasto -->
+		 <!-- caja dialogo registro pago -->
 		  <div class="dialog-container" id="dialogog">
 		    <div class="dialog">
 		    	<div class="dialog-title" id="titulod">REGISTRO DE GASTO</div>
@@ -487,28 +429,5 @@ function saldobanco($mysqli){
       <circle id="spinner" cx="16" cy="16" r="14" fill="none"></circle>
     </svg>
   </div>
-  
-  <script>
-  	function abreTab(evt, titulo) {
-    // Declare all variables
-    var i, tabcontent, tablinks;
-
-    // Get all elements with class="tabcontent" and hide them
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-
-    // Get all elements with class="tablinks" and remove the class "active"
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-
-    // Show the current tab, and add an "active" class to the button that opened the tab
-    document.getElementById(titulo).style.display = "block";
-    evt.currentTarget.className += " active";
-}
-  </script>
 	</body>
 </html>
