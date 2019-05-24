@@ -124,6 +124,7 @@ function leeXML(text) {
 			var timbre=xmlDoc.getElementsByTagName("tfd:TimbreFiscalDigital")[0].attributes;
 			var fecha;
 			var fpago;
+			var metpago;
 			var serie = datosf["serie"];
 			var folio = datosf["folio"];
 			var seriefolio = datosf["folio"]+datosf["serie"];
@@ -153,6 +154,7 @@ function leeXML(text) {
 				 total = comprob.getNamedItem("Total").nodeValue
 				 fecha= comprob.getNamedItem("Fecha").nodeValue
 				 fpago= comprob.getNamedItem("FormaPago").nodeValue;
+				 metpago= comprob.getNamedItem("MetodoPago").nodeValue;
 				 imps = capiva(version,xmlDoc);
 				 iva =imps['iva'];
 				 ieps= imps['ieps'];
@@ -168,6 +170,7 @@ function leeXML(text) {
 					cfdi={exito:0,
 							  fecha: fecha,
 							  fpago:fpago,
+							  metpago:metpago,
 							  tipoc:tipoc,
 							  stotal:stotal,
 							  iva:iva,
