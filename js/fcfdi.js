@@ -70,11 +70,11 @@ function descimp(coleccionimp){
 }
 
 function capiva(version,xdoc){
-	var iva
+	var iva =[];
 	//buscar definiciones de iva
 	var imp = xdoc.getElementsByTagName("cfdi:Impuestos");
 	if(imp.length ==0){
-		iva = 0;
+		iva['iva'] = 0;
 	}else{
 		iva =descimp(imp);		
 		}
@@ -105,9 +105,7 @@ function leeserief(version,comprob){
 function leeXML(text) {
 	//lee el archivo cfdo xml y obtiene sus datos
 	var xmlDoc;
-
 	var cfdi = [];
-	
 	try{
 		xmlDoc = $.parseXML(text);
 		var comprob = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0].attributes;
