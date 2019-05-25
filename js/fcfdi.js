@@ -60,12 +60,14 @@ function descimp(coleccionimp){
 	//recorre la coleccion impuestos
 	var longcol= coleccionimp.length;
 		for(var i= 0; i<longcol; i++){
+			var importe
 			var tieneatrib=coleccionimp[i].attributes.length;
 			if(tieneatrib>0){
 				//es el nodo correcto
-				var importe=desctraslados(coleccionimp[i]);
-				return importe;
-			}		
+				 importe=desctraslados(coleccionimp[i]);
+				//hay nodo pero no valor de iva
+			}else{importe=0;}	
+			return importe;
 		}
 }
 
@@ -101,6 +103,96 @@ function leeserief(version,comprob){
 	return resul;
 }
 
+function leeXMLing(texto){
+	//lee el archivo cfdi de ingresos xml y obtiene sus datos
+	var xmlDoc;
+	var cfdi = [];
+	try{
+		xmlDoc = $.parseXML(texto);
+		var comprob = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0].attributes;
+		var tipoc=comprob.getNamedItem("TipoDeComprobante").nodeValue;
+		//Si el cfdi no es de ingreso se genera excepcion
+		if(tipoc!=="I"){throw new Error('EL CFDI NO ES DE INGRESO')};
+		var version = getver(comprob);
+		var datosf = leeserief(version,comprob);
+		var emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0].attributes;
+		var receptor = xmlDoc.getElementsByTagName("cfdi:Receptor")[0].attributes;
+		var conceptos=[];
+		var conceptos = xmlDoc.getElementsByTagName("cfdi:Concepto");
+		var concepto =xmlDoc.getElementsByTagName("cfdi:Concepto")[0].attributes;
+		var timbre=xmlDoc.getElementsByTagName("tfd:TimbreFiscalDigital")[0].attributes;
+		var fecha;
+		var fpago;
+		var metpago;
+		var serie = datosf["serie"];
+		var folio = datosf["folio"];
+		var seriefolio = datosf["folio"]+datosf["serie"];
+		var imps;
+		var iva;
+		var ieps;
+		var concepa ;
+		var concepa1;
+		var concep;
+		var astotal;
+		var stotal;
+		var total;
+		var rfc
+		var nombre
+		var nombrea
+		var rfcrecep
+		var uuid;				 
+		var haydescu = comprob.getNamedItem("Descuento");
+			 //si hay descuento se modifica subtotal
+			 if(haydescu){
+				 var descu = parseFloat(comprob.getNamedItem("Descuento").nodeValue);
+				 var astotal= parseFloat(comprob.getNamedItem("SubTotal").nodeValue);
+				 stotal = astotal - descu;
+			 }else{
+				 stotal = parseFloat(comprob.getNamedItem("SubTotal").nodeValue);	 
+			 };
+			 total = comprob.getNamedItem("Total").nodeValue
+			 fecha= comprob.getNamedItem("Fecha").nodeValue
+			 fpago= comprob.getNamedItem("FormaPago").nodeValue;
+			 metpago= comprob.getNamedItem("MetodoPago").nodeValue;
+			 imps = capiva(version,xmlDoc);
+			 iva =imps['iva'];
+			 ieps= imps['ieps'];
+			 //si hay ieps, se modifica subtotal
+			 if(ieps>0){stotal=stotal+ieps};
+			 rfc = emisor.getNamedItem("Rfc").nodeValue;
+			 nombrea=emisor.getNamedItem("Nombre");
+			 if(nombrea){nombre = nombrea.nodeValue}else{nombre="SIN NOMBRE"};
+			 rfcrecep =receptor.getNamedItem("Rfc").nodeValue;
+			 concepa = concepto.getNamedItem("Descripcion");
+			 concep = concepa.nodeValue
+			 uuid = timbre.getNamedItem("UUID").nodeValue;	
+				cfdi={exito:0,
+						  fecha: fecha,
+						  fpago:fpago,
+						  metpago:metpago,
+						  tipoc:tipoc,
+						  stotal:stotal,
+						  iva:iva,
+						  total:total,
+						  serie:serie,
+						  folio:folio,
+						  seriefolio:seriefolio,
+						  conceptos:conceptos,
+						  conceptoc:concep,
+						  rfc:rfc,
+						  nombre: nombre,
+						  rfcrecep:rfcrecep,
+						  uuid:uuid
+				}
+	}
+	catch(err){
+		cfdi={exito:1,
+				  fecha:	new Date(),
+				  error: err
+					};
+		}
+		return cfdi;
+	}
 
 function leeXML(text) {
 	//lee el archivo cfdo xml y obtiene sus datos
