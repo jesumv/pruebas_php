@@ -23,14 +23,18 @@
             $subt =$valor[6];
             $iva=$valor[7];
             $tot = $valor[8];
-            $arch=$valor[9];
+            $al0=$valor[9];
+            $al16=$valor[10];
+            $exen=$valor[11];
+            $arch=$valor[12];
 
-            
-            if($iva=="0.00" || $iva==null){ $actos0= $subt;$actos16='null';}else{$actos16=$subt; $actos0='null';}
+            if($al16==0){$al16='NULL';};
+            if($al0==0){$al0='NULL';};
+            if($exen==0){$exen='NULL';};
            try {
                 $mysqli->autocommit(false);
-                $mysqli->query("INSERT INTO factrec (serie, folio,concepto,archivo,fecha,rfc,subtotal,iva,total,actosal16,actosal0)
-					VALUES ('$serie','$folio','$concep','$arch','$fecha','$rfc',$subt,$iva,$tot,$actos16,$actos0)")or die (mysqli_error($mysqli));
+                $mysqli->query("INSERT INTO factrec (serie, folio,concepto,archivo,fecha,rfc,subtotal,iva,total,actosal16,actosal0,actosexen)
+					VALUES ('$serie','$folio','$concep','$arch','$fecha','$rfc',$subt,$iva,$tot,$al16,$al0,$exen)")or die (mysqli_error($mysqli));
                 //efectuar la operacion
                 $mysqli->commit();
                 $resul=0;

@@ -35,52 +35,86 @@ function concepto(cant,uni,desc){
 	return descom;	
 }
 
-function desctraslados(nodoimp){
-	var coltrans=nodoimp.getElementsByTagName("cfdi:Traslado");
-	var longtrans=coltrans.length;
+function desctraslados(concepto){
+	//extrae traslados del nodo concepto
+	var traslados=concepto.getElementsByTagName("cfdi:Traslado");
+	var longtrans=traslados.length;
 	var impiva=0;
 	var impieps=0;
-	var imps = new Array();
+	var imps = [];
 	for(var i=0; i<longtrans; i++){
-		var impto = coltrans[i].attributes.getNamedItem("Impuesto").nodeValue
-		if(impto=="002"){
-			var ivacant=parseFloat(coltrans[i].attributes.getNamedItem("Importe").nodeValue);
-			var impiva= impiva+ivacant;
+		var impto = traslados[i].attributes.getNamedItem("Impuesto").nodeValue
+		var tipoimpto=traslados[i].attributes.getNamedItem("TipoFactor").nodeValue
+		//si esta exento del impuesto no hay importe
+		if(tipoimpto==!"Exento"){
+			switch(impto) {
+			  case '002':
+				var ivacant=parseFloat(traslados[i].attributes.getNamedItem("Importe").nodeValue);
+				 impiva= impiva+ivacant;
+			    break;
+			  case '003':
+				var iepscant=parseFloat(traslado[i].attributes.getNamedItem("Importe").nodeValue);
+				impieps= impieps+iepscant;
+			    break;
+			  default:
+			    impiva=0;
+			  	impieps=0;
 			}
-		if(impto=="003"){
-			var iepscant=parseFloat(coltrans[i].attributes.getNamedItem("Importe").nodeValue);
-			var impieps= impieps+iepscant;
-			}
+		}else{
+			impiva="";
+			imipes="";
+		}
+
 	}
 	imps['iva'] = impiva;
 	imps['ieps'] = impieps;
 	return imps;
 }
-function descimp(coleccionimp){
-	//recorre la coleccion impuestos
-	var longcol= coleccionimp.length;
+function descimp(colecconcep){
+	//recorre la coleccion conceptos
+	var longcol= colecconcep.length;
+	var importe=[];
+	importe['iva']=0;
+	importe['ieps']=0;
+	
 		for(var i= 0; i<longcol; i++){
-			var importe
-			var tieneatrib=coleccionimp[i].attributes.length;
-			if(tieneatrib>0){
-				//es el nodo correcto
-				 importe=desctraslados(coleccionimp[i]);
-				//hay nodo pero no valor de iva
-			}else{importe=0;}	
-			return importe;
+				 var importesact=desctraslados(colecconcep[i]);
+				 	importe['iva']=importe['iva']+ importesact['iva'];
+					importe['ieps']=importe['ieps']+ importesact['ieps']; 
 		}
+		return importe;
 }
 
-function capiva(version,xdoc){
-	var iva =[];
+
+function calcimptos(nodoimpuestos){
+	//extrae los datos del nodo cfdi:impuestos global
+	var imptos =[];
+	imptos['iva']=0;
+	imptos['ieps']=0;
+	
 	//buscar definiciones de iva
-	var imp = xdoc.getElementsByTagName("cfdi:Impuestos");
-	if(imp.length ==0){
-		iva['iva'] = 0;
-	}else{
-		iva =descimp(imp);		
-		}
-	return iva;
+	var traslados = nodoimpuestos.getElementsByTagName("cfdi:Traslados");
+	var trasladocol=traslados[0].children;
+		//se sumaran los valores de impuesto por cada traslado
+		var longtras=trasladocol.length;
+		for(var i=0;i<longtras;i++){
+			var traslado=trasladocol[i].attributes
+			//examina el tipo de impuesto
+			var tipo=traslado.getNamedItem("Impuesto").nodeValue;
+			var importe=parseFloat(traslado.getNamedItem("Importe").nodeValue);
+			switch(tipo){
+			case "002":
+				imptos['iva']=imptos['iva']+importe;
+			break;
+			case "003":
+				imptos['ieps']=imptos['ieps']+importe;
+			break;	
+			default:
+				imptos['iva']="";
+				imptos['ieps']="";
+			}
+		}	
+	return imptos;
 	}
 
 
@@ -103,18 +137,67 @@ function leeserief(version,comprob){
 	return resul;
 }
 
+function leepagos(doctosrel){
+	var longdoc=doctosrel.length;
+	var pagos= [];
+	for (var i=0;i<longdoc;i++){
+		var folio=doctosrel[i].attributes.getNamedItem("Folio").nodeValue; 
+		var importep= doctosrel[i].attributes.getNamedItem("ImpPagado").nodeValue;
+		var saldoant= doctosrel[i].attributes.getNamedItem("ImpSaldoAnt").nodeValue;
+		var saldact= doctosrel[i].attributes.getNamedItem("ImpSaldoInsoluto").nodeValue;
+		pagos[i]={"folio":folio,"import":importep,"saldoant":saldoant,"saldoact":saldact};
+	}
+	return pagos;
+}
+function leeXMLpago(texto){
+	//lee el archivo cfdi de ingresos xml y obtiene sus datos
+	var xmlDoc;
+	var cfdi = [];
+	try{
+		var parser = new DOMParser();
+		var xmlDoc = parser.parseFromString(texto,"text/xml");
+		var comprob = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0];
+		var atribcomp = comprob.attributes;
+		var nodos= comprob.children;
+		var tipoc=atribcomp.getNamedItem("TipoDeComprobante").nodeValue;
+		var serie=atribcomp.getNamedItem("Serie").nodeValue;
+		var folio=atribcomp.getNamedItem("Folio").nodeValue;
+		var pagos = xmlDoc.getElementsByTagName("pago10:Pagos")[0].children;
+		var fechapago= pagos[0].attributes.getNamedItem("FechaPago").nodeValue;
+		var doctosrel= pagos[0].children;
+		var pagosf=leepagos(doctosrel);
+		cfdi={exito:0,
+				tipoc:tipoc,
+				  fecha: fechapago,
+				  serie:serie,
+				  folior:folio,
+				  pagos:pagosf			  
+		}
+		
+	}catch(err){
+		cfdi={exito:1,
+				  fecha:	new Date(),
+				  error: err
+					};
+		}
+		return cfdi;
+	}
+
 function leeXMLing(texto){
 	//lee el archivo cfdi de ingresos xml y obtiene sus datos
 	var xmlDoc;
 	var cfdi = [];
 	try{
-		xmlDoc = $.parseXML(texto);
-		var comprob = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0].attributes;
-		var tipoc=comprob.getNamedItem("TipoDeComprobante").nodeValue;
+		var parser = new DOMParser();
+		var xmlDoc = parser.parseFromString(texto,"text/xml");
+		var comprob = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0];
+		var atribcomp = comprob.attributes;
+		var nodos= comprob.children;
+		var tipoc=atribcomp.getNamedItem("TipoDeComprobante").nodeValue;
 		//Si el cfdi no es de ingreso se genera excepcion
 		if(tipoc!=="I"){throw new Error('EL CFDI NO ES DE INGRESO')};
-		var version = getver(comprob);
-		var datosf = leeserief(version,comprob);
+		var version = getver(atribcomp);
+		var datosf = leeserief(version,atribcomp);
 		var emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0].attributes;
 		var receptor = xmlDoc.getElementsByTagName("cfdi:Receptor")[0].attributes;
 		var conceptos=[];
@@ -127,42 +210,56 @@ function leeXMLing(texto){
 		var serie = datosf["serie"];
 		var folio = datosf["folio"];
 		var seriefolio = datosf["folio"]+datosf["serie"];
-		var imps;
 		var iva;
 		var ieps;
 		var concepa ;
 		var concepa1;
 		var concep;
-		var astotal;
 		var stotal;
 		var total;
 		var rfc
 		var nombre
 		var nombrea
 		var rfcrecep
-		var uuid;				 
-		var haydescu = comprob.getNamedItem("Descuento");
+		var nombrerecep
+		var uuid;					 
+		var haydescu = atribcomp.getNamedItem("Descuento");
+		var astotal= atribcomp.getNamedItem("SubTotal").nodeValue;
+		
 			 //si hay descuento se modifica subtotal
 			 if(haydescu){
-				 var descu = parseFloat(comprob.getNamedItem("Descuento").nodeValue);
-				 var astotal= parseFloat(comprob.getNamedItem("SubTotal").nodeValue);
-				 stotal = astotal - descu;
+				 var descu = atribcomp.getNamedItem("Descuento").nodeValue;
+				 stotal = parseFloat(astotal) - parseFloat(descu);
 			 }else{
-				 stotal = parseFloat(comprob.getNamedItem("SubTotal").nodeValue);	 
+				 stotal = parseFloat(astotal);	 
 			 };
-			 total = comprob.getNamedItem("Total").nodeValue
-			 fecha= comprob.getNamedItem("Fecha").nodeValue
-			 fpago= comprob.getNamedItem("FormaPago").nodeValue;
-			 metpago= comprob.getNamedItem("MetodoPago").nodeValue;
-			 imps = capiva(version,xmlDoc);
-			 iva =imps['iva'];
-			 ieps= imps['ieps'];
+			 total = atribcomp.getNamedItem("Total").nodeValue
+			 fecha= atribcomp.getNamedItem("Fecha").nodeValue
+			 if(comprob.hasAttribute("FormaPago")){fpago= atribcomp.getNamedItem("FormaPago").nodeValue;}else{
+				 fpago="";
+			 }
+			 metpago= atribcomp.getNamedItem("MetodoPago").nodeValue;
+			 //definicion de impuestos
+			 //Verificar si hay nodo impuestos
+			 	if(nodos[3].localName==="Impuestos"){
+			 		var impsatrib=nodos[3].attributes;
+					 var totimps=impsatrib.getNamedItem("TotalImpuestosTrasladados").nodeValue;
+					 var imps = calcimptos(nodos[3]);
+					 iva =imps['iva'];
+					 ieps= imps['ieps']; 
+			 	}else{
+			 		iva="";
+			 		ieps="";
+			 	}
 			 //si hay ieps, se modifica subtotal
-			 if(ieps>0){stotal=stotal+ieps};
+			 	var stotal= ieps > 0 ? parseFloat(stotal)+parseFloat(ieps) : parseFloat(stotal);
+			 //if(ieps>0){stotal=parseFloat(stotal)+parseFloat(ieps)};
 			 rfc = emisor.getNamedItem("Rfc").nodeValue;
 			 nombrea=emisor.getNamedItem("Nombre");
+			 //si no hay nombre, se agrega generico
 			 if(nombrea){nombre = nombrea.nodeValue}else{nombre="SIN NOMBRE"};
 			 rfcrecep =receptor.getNamedItem("Rfc").nodeValue;
+			 nombrerecep =receptor.getNamedItem("Nombre").nodeValue;
 			 concepa = concepto.getNamedItem("Descripcion");
 			 concep = concepa.nodeValue
 			 uuid = timbre.getNamedItem("UUID").nodeValue;	
@@ -173,6 +270,7 @@ function leeXMLing(texto){
 						  tipoc:tipoc,
 						  stotal:stotal,
 						  iva:iva,
+						  ieps:ieps,
 						  total:total,
 						  serie:serie,
 						  folio:folio,
@@ -182,6 +280,7 @@ function leeXMLing(texto){
 						  rfc:rfc,
 						  nombre: nombre,
 						  rfcrecep:rfcrecep,
+						  nombrerecep:nombrerecep,
 						  uuid:uuid
 				}
 	}
@@ -227,10 +326,11 @@ function leeXML(text) {
 			var astotal;
 			var stotal;
 			var total;
-			var rfc
-			var nombre
-			var nombrea
-			var rfcrecep
+			var rfc;
+			var nombre;
+			var nombrea;
+			var rfcrecep;
+			var nombrerecep;
 			var uuid;				 
 			var haydescu = comprob.getNamedItem("Descuento");
 				 //si hay descuento se modifica subtotal
@@ -254,6 +354,7 @@ function leeXML(text) {
 				 nombrea=emisor.getNamedItem("Nombre");
 				 if(nombrea){nombre = nombrea.nodeValue}else{nombre="SIN NOMBRE"};
 				 rfcrecep =receptor.getNamedItem("Rfc").nodeValue;
+				 nombrerecep =receptor.getNamedItem("Nombre").nodeValue;
 				 concepa = concepto.getNamedItem("Descripcion");
 				 concep = concepa.nodeValue
 				 uuid = timbre.getNamedItem("UUID").nodeValue;	
@@ -271,8 +372,9 @@ function leeXML(text) {
 							  conceptos:conceptos,
 							  conceptoc:concep,
 							  rfc:rfc,
-							  nombre: nombre,
+							  nombre:nombre,
 							  rfcrecep:rfcrecep,
+							  nombrerecep:nombrerecep,
 							  uuid:uuid
 							   };
 			

@@ -3,51 +3,316 @@
 <head>
 <meta charset="utf-8">
 <title>Vannetti Pruebas</title>
-<style>
-ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    border: 1px solid #555;
-    width: 200px;
-}
-
-li {
-    text-align: center;
-    border-bottom: 1px solid #555;
-}
-
-li:last-child {
-    border-bottom: none;
-}
-
-li a {
-    display: block;
-    color: #000;
-    padding: 8px 16px;
-    text-decoration: none;
-    
-}
-
-li a:hover {
-    background-color: #555;
-    color: white;
-}
-
-.active {
-    background-color: #4CAF50;
-    color: white;
-}
-</style>
-</head>
-<body>
-	<h2>PORTAL DE PRUEBAS VANNETTI</h2>
-	<!-- menu -->
-	<ul>
-		<li><a href="cargarxml.html">PRUEBAS XML</a></li>
-		<li><a href="recoc.php">REC OC</a></li>
-		<li><a href="reggastov2.php">REG GASTO</a></li>
-	</ul>
+<link rel="stylesheet" href= "css/pruebas.css" />
+<script src="js/fcfdi.js"></script>
+<script src="js/jquery3/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+(function(){
+	'use strict';
+	function encabfact(tbl,contenido){
+		//crea el encabezado
+		var reng0 = document.createElement('tr');
+		var celdasc=[];
+		var texto;
+		//titulos
+		reng0.setAttribute("id", "re0");
+		for(var i=0; i<6; i++){
+			celdasc[i] = document.createElement('td');
+			celdasc[i].setAttribute("id", "celda0"+i);
+			reng0.appendChild(celdasc[i]);
+			switch(i){
+			case 0:
+				texto="EMISOR";
+			break;
+			case 1:
+				texto= "RFC";
+			break;
+			case 2:
+				texto= "FECHA";
+			break;
+			case 3:
+				texto= "SERIE";
+			break;
+			case 4:
+				texto= "FOLIO";
+			break;
+			case 5:
+				texto= "FORMA DE PAGO";
+			break;
+			case 6:
+				texto= "METODO DE PAGO";
+			break;
+			default:
+				texto="";
+			}
+			celdasc[i].innerHTML= texto;
+		}
 	
+		tbl.appendChild(reng0);
+		//celdas con datos
+		var reng1 = document.createElement('tr');
+		var celdav=[];
+		var valor;
+		reng1.setAttribute("id", "re1");
+		for(var i=0; i<6; i++){
+			celdav[i] = document.createElement('td');
+			celdav[i].setAttribute("id", "celda1"+i);
+			switch(i){
+			case 0:
+				valor= contenido["nombre"];
+			break;
+			case 1:
+				valor= contenido["rfc"];
+			break;
+			case 2:
+				valor= contenido["fecha"];
+			break;
+			case 3:
+				valor= contenido["serie"];
+			break;
+			case 4:
+				valor= contenido["folio"];
+			break;
+			case 5:
+				valor= contenido["fpago"];
+			break;
+			case 6:
+				valor= contenido["metpago"];
+			break;
+			default:
+				valor="";
+			}
+			celdav[i].innerHTML = valor;
+			reng1.appendChild(celdav[i]);
+		}
+		
+			tbl.appendChild(reng1);
+	}
+	
+	function piefact(tbl,subtotal,iva,ieps,total){
+		//crea el pie
+		for(var i=0; i<3;i++){
+			var cadena= 'reng10'+i;
+				cadena = document.createElement('tr');
+				cadena.setAttribute("id", "re10"+i);
+				for(var j=0;j<2;j++){
+					var cadena2= 'celda10'+i+j;
+					cadena2= document.createElement('td');
+					cadena2.setAttribute("id", 'celd10'+i+j);
+					cadena.appendChild(cadena2);
+				}
+				tbl.appendChild(cadena);
+		}
+		document.getElementById("celd1000").innerHTML = "SUBTOTAL";
+		document.getElementById("celd1001").innerHTML = subtotal;
+		document.getElementById("celd1010").innerHTML = "IVA";
+		document.getElementById("celd1011").innerHTML = iva;
+		document.getElementById("celd1020").innerHTML = "TOTAL";
+		document.getElementById("celd1021").innerHTML = total;
+	}
+	function encabconcep(tblc){
+		//los encabezados de la seccion conceptos
+		var rengc= document.createElement('tr');
+		var celdc=[];
+		rengc.setAttribute("id", "re2");
+		for(var i=0;i<8;i++){
+			var texto;
+			var cadena2="celda2"+i;
+			celdc[i]=document.createElement('td');
+			 celdc[i].setAttribute("id",cadena2);
+			switch(i){
+			case 0:
+				texto="CANTIDAD";
+				break;
+			case 1:
+				texto="UNIDAD";
+				break;
+			case 2:
+				texto="CLAVE SAT";
+				break;
+			case 3:
+				texto="NO. ID";
+				break;
+			case 4:
+				texto="DESCRIPCION";
+				break;
+			case 5:
+				texto="PRECIO U";
+				break;
+			case 6:
+				texto="IMPUESTOS";
+				break;
+			case 7:
+				texto="IMPORTE";
+				break;
+			break;
+			default:
+				texto="";
+			}
+			celdc[i].innerHTML=texto;
+			rengc.appendChild(celdc[i]);
+		}
+			tblc.appendChild(rengc);
+	}
+	
+	function hazconcep(tbl2,concepto){
+		//crea un reglon de concepto
+		const nreng = document.getElementsByTagName("tr").length;
+		var rengt2= document.createElement('tr');
+		rengt2.setAttribute("id", "re"+(nreng+1));
+		//se revisa si el concepto trae impuesto
+		if(concepto.childNodes[0]){	
+			var tiponodo= concepto.childNodes[0].nodeType;
+			//se revisa si el archivo trae nodos texto
+			var numnodo = tiponodo===1?0:1;
+			var impuesto= concepto.childNodes[numnodo].childNodes[numnodo].childNodes[numnodo].getAttribute("Impuesto");
+			var importeimp;
+			if(impuesto==="002"){
+				 importeimp = concepto.childNodes[numnodo].childNodes[numnodo].childNodes[numnodo].getAttribute("Importe");	
+			}else{importeimp="0"};
+		}else{importeimp=""}
+
+		//crear las celdas 
+		for(var i=0;i<8;i++){
+			var cadena3= 'celda'+(nreng+1)+i;
+			var valor;
+			cadena3= document.createElement('td');
+			cadena3.setAttribute("id", cadena3);
+			rengt2.appendChild(cadena3);
+			switch(i){
+			case 0:
+				valor=concepto.getAttribute("Cantidad");
+				break;
+			case 1:
+				valor=concepto.getAttribute("ClaveUnidad");
+				break;
+			case 2:
+				valor=concepto.getAttribute("ClaveProdServ");
+				break;
+			case 3:
+				valor=concepto.getAttribute("NoIdentificacion");
+				break;
+			case 4:
+				valor=concepto.getAttribute("Descripcion");
+				break;
+			case 5:
+				valor=concepto.getAttribute("ValorUnitario");
+				break;
+			case 6:
+				valor= importeimp;
+				break;
+			case 7:
+				valor=concepto.getAttribute("Importe");
+				break;
+			break;
+			default:
+				valor="";
+			}
+			cadena3.innerHTML=valor;
+		}
+		tbl2.appendChild(rengt2);
+	}
+	function haztabla(contenido){
+		//extraer conceptos
+		var conceptosex=contenido.conceptos;
+		var conclong=conceptosex.length;
+		//crear la tabla
+		const tbl = document.getElementById('efactura');
+		const tbl2 = document.getElementById('cfactura');
+		const tbl3 = document.getElementById('pfactura');
+		//encabezado
+		encabfact(tbl,contenido);
+		//hacer renglones de conceptos
+		encabconcep(tbl2);
+		for(var i=0;i<conclong;i++){
+			hazconcep(tbl2,conceptosex[i]);
+		}
+		piefact(tbl3,contenido["stotal"],contenido["iva"],contenido["ieps"],contenido["total"]);
+	}
+
+	$(document).ready(function(){
+		//definicion de objetos
+		var app ={
+				 container: document.querySelector('.main'),
+				 avisoDialog: document.querySelector('.dialog-container'),
+		}
+		  /*****************************************************************************
+		   *
+		   * Methods to update/refresh the UI
+		   *
+		   ****************************************************************************/
+		   // Toggles the visibility of the dialog.
+		   app.toggleDialog = function(visible) {
+		     if (visible) {
+		       app.avisoDialog.classList.add('dialog-container--visible');
+		     } else {
+		       app.avisoDialog.classList.remove('dialog-container--visible');
+		       var errreng=document.getElementById("errmens");
+		       errmens.innerHtML="";
+		     }
+		   };
+		   app.menserr= function(mensaje){
+			   //muestra mensaje en dialogo
+			   var inserta= document.getElementById("errmens");
+			   inserta.innerHTML=mensaje;
+		   }
+			function creapag(e,callback){
+				var files = e.target.files; // FileList object
+				var resulta;
+				var f=files[0];
+				var r = new FileReader();
+			      	r.onload = (function(f){
+			      		 return function(e){
+			      			var contents=e.target.result;
+							 resulta=callback(contents); 
+							 if(resulta.exito===0){
+								 haztabla(resulta); 
+							 }else{
+							 app.toggleDialog(true);
+							 app.menserr(resulta.error);
+							 document.getElementById("files").value = "";
+								 }
+				     		  
+			      		}
+			      	})(f);
+					r.readAsText(f);
+
+			}
+		var evt = document.getElementById('files');
+		evt.addEventListener('change', function(e){creapag(e,leeXMLing)},false);
+		var butok = document.getElementById('butok');
+		butok.addEventListener('click', function(){app.toggleDialog(false)},false);
+	});	
+})();
+</script>
+</head>
+<header>
+	<h2 class='header__title'>PORTAL DE PRUEBAS VANNETTI</h2>
+	<form>
+		<div>
+			<label for="files">Seleccione las facturas</label>
+		</div>
+		<div>
+			<input id="files" name="files[]" type="file" accept=".xml" />
+		</div>	
+	</form>
+</header>
+<body>
+	<div id="t1"><table id="efactura" ></table></div>
+	<br>
+	<div id="t2" ><table id="cfactura"></table></div>
+	<br>
+	<div id="t3"><table id="pfactura"></table></div>
+	<div class='dialog-container'> 
+		<div id="aviso" class='dialog'>
+			<div class="dialog-title">AVISO:</div>
+			<div class="dialog-body" id="errmens"></div>
+			<div class="dialog-buttons">
+        		<button id="butok" class="button">OK</button>
+      		</div>
+		</div>
+	</div>	
+		
 </body>
+<footer></footer>
 </html>

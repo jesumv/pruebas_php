@@ -10,9 +10,48 @@
 		<script src="js/jquery3/jquery-3.0.0.min.js"></script>
 		<script type="text/javascript">
 		'use strict';
-		(function(){
-		
-			var app=[];			
+		(function(){		
+			var app=[];
+			function llenacelda(reng,conten){
+				var celda1 = document.createElement('td');
+				reng.appendChild(celda1);
+				celda1.appendChild(document.createTextNode(conten))
+				return celda1;
+			}
+			function checatots(reng,stotal,iva,total){
+				var checar = parseFloat(stotal)+parseFloat(iva)
+				var checarfx= checar.toFixed(2);
+				var estacel;
+				if(checarfx==total){
+						estacel=llenacelda(reng,"OK");
+						estacel.style.backgroundColor = 'green';
+					}else{
+						estacel=llenacelda(reng,"error");
+						estacel.style.backgroundColor = 'red';
+					}
+			}
+			function llenareng(cfdi){
+			var tabla;
+			tabla = document.getElementById("facts")
+			var tbody = document.createElement('tbody');
+			tbody.setAttribute("id", "lista");
+			var cuerpo = document.getElementById("lista");
+			tabla.appendChild(tbody);
+			var reng= document.createElement('tr'); 
+			tbody.appendChild(reng);
+			llenacelda(reng,cfdi.fecha);
+			llenacelda(reng,cfdi.erfc);
+			llenacelda(reng,cfdi.enombre);
+			llenacelda(reng,cfdi.serie);
+			llenacelda(reng,cfdi.folio);
+			llenacelda(reng,cfdi.fpago);
+			llenacelda(reng,cfdi.concep);
+			llenacelda(reng,cfdi.stotal);
+			llenacelda(reng,cfdi.iva);
+			llenacelda(reng,cfdi.total);
+			checatots(reng,cfdi.stotal,cfdi.iva,cfdi.total),
+			llenacelda(reng,cfdi.arch);
+			}
 			
 			function resultado(e,callback){
 				var files = e.target.files; // FileList object
@@ -23,19 +62,17 @@
 			                		return function(e) {
 			                			var arch= f.name;
 			                    		var contents = e.target.result;
-			                    		var cfdireg;
 
 			                    			var resul=leexpath(contents,arch);
 			                    			if(resul.exito ==0){
-			                    				llenaforma(resul.fecha,resul.fpago,resul.stotal,resul.iva,resul.total,
-			                    				resul.seriefolio,resul.conceptoc)
+			                    				llenareng(resul);
 			                    			}else{
 			                    				var mensa = document.getElementById("mensaje");
 			                					mensa.value= resul.error;
 			                					var mensac = document.getElementById("mensd");
 			                					mensac.classList.remove("ocult");
 			                					var fecha = new Date();
-			                					llenaforma(fecha)
+			                					llenareng(fecha)
 			                					
 			                    				}
 
@@ -50,33 +87,77 @@
 				   return new window.DOMParser().parseFromString(xmlStr, "text/xml");
 				}
 			
-			function leexpath(contenido){
-				 		var txt = "";
-				 		var nodo =parseXml(contenido);
-				 		var nsResolver = nodo.createNSResolver( nodo.ownerDocument == null ? 
-				 				nodo.documentElement : nodo.ownerDocument.documentElement);
-				 		var path2="//Comprobante";
-				 		var nodes2 = document.evaluate(path2,nodo,nsResolver,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
-				 		var snap2=nodes2.snapshotItem(0);
-				 		var path = "/*";
-				        var nodes = document.evaluate(path,nodo, nsResolver,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-						var snap=nodes.snapshotItem(0);
-						var cfdi =[];
-						var lugar = snap.attributes.getNamedItem("LugarExpedicion").value;
-						var mpago = snap.attributes.getNamedItem("MetodoPago").value;
-						var total = snap.attributes.getNamedItem("Total").value;
-						var stotal = snap.attributes.getNamedItem("SubTotal").value;
-						var fpago= snap.attributes.getNamedItem("FormaPago").value;
-						var fecha= snap.attributes.getNamedItem("Fecha").value;
-						var folio= snap.attributes.getNamedItem("Folio").value;
-						var serie= snap.attributes.getNamedItem("Serie").value;
-						var version= snap.attributes.getNamedItem("Version").value;
-						
+			function liva(elemento){
+				var iva1=0;
+				var claseimp = elemento.attributes.getNamedItem("Impuesto").value;
+				if(claseimp=="002"){
+						iva1=elemento.attributes.getNamedItem("Importe").value;		
+					}
+				return iva1;
+			}
+			function leexpath(contenido,arch){
+						var exito;
+						var cfdi;
+						try{
+							var nodo =parseXml(contenido);
+					 		var nsResolver = nodo.createNSResolver( nodo.ownerDocument == null ? 
+					 				nodo.documentElement : nodo.ownerDocument.documentElement);
+					 		var path = "/*";
+					        var nodes = document.evaluate(path,nodo, nsResolver,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+							var snap=nodes.snapshotItem(0);
+							var lugar = snap.attributes.getNamedItem("LugarExpedicion").value;
+							var mpago = snap.attributes.getNamedItem("MetodoPago").value;
+							var stotal = snap.attributes.getNamedItem("SubTotal").value;
+							var desc= snap.attributes.getNamedItem("Descuento")?snap.attributes.getNamedItem("Descuento").value:"";
+							var total = snap.attributes.getNamedItem("Total").value;
+							var cstotal= desc==""?stotal:stotal-desc;
+							var fpago= snap.attributes.getNamedItem("FormaPago").value;
+							var fecha= snap.attributes.getNamedItem("Fecha").value;
+							var folio=snap.attributes.getNamedItem("Folio")?snap.attributes.getNamedItem("Folio").value:"";
+							var serie= snap.attributes.getNamedItem("Serie")?snap.attributes.getNamedItem("Serie").value:"";
+							var version= snap.attributes.getNamedItem("Version").value;
+							var elementos= snap.children;
+							var emisor = elementos[0];
+							var erfc=emisor.attributes.getNamedItem("Rfc").value;
+							var enombre=emisor.attributes.getNamedItem("Nombre").value;
+							var receptor=elementos[1]
+							var concep = elementos[2].children[0].attributes.getNamedItem("Descripcion").value;
+							var imptos = elementos[3];
+							var traslados = imptos.children[0];
+							var trasladosi=traslados.children;
+							var iva;
+							var traslongi=trasladosi.length;
+							for(var i=0;i<traslongi;i++){
+								iva = liva(trasladosi[i]);
+								if(iva!=0){exito=0;break;}	;
+							}
+							 cfdi = {
+									arch:arch,
+								    total:total,
+								    stotal:cstotal,
+								    fpago:fpago,
+								    fecha:fecha,
+								    folio:folio,
+								    serie:serie,
+								    erfc:erfc,
+								    enombre:enombre,
+								    concep:concep,
+								    iva:iva,
+								    exito:exito,
+								    error:null
+								};
+						}catch(Exception){
+							cfdi={
+								exito:-1,
+								error: Exception
+							}
+
+							
+						}
+				 		
+						return cfdi;
 			}
 			
-			function datosarch(){
-				
-			}
 			
 				$(document).ready(function(){
 					var evt = document.getElementById('files');
@@ -122,7 +203,11 @@
 				</form>
 			</div>
 		<div id="salida">
-			<table id="fact">
+			<table id="facts">
+			<thead>
+			<tr><th>Fecha</th><th>RFC</th><th>Nombre</th><th>Serie</th><th>Folio</th><th>Formapago</th>
+			<th>Concepto</th><th>Subtotal</th><th>IVA</th><th>Total</th><th>EVAL</th><th>Arch</th></tr>
+			</thead>
 			</table>
 		</div>
 
