@@ -2,11 +2,7 @@
 	/**
 	 * esta clase se usa para operaciones de base de datos
 	 */
-	 
-	 /**
-	  * 
-	  */ 
-	
+	 	
 	class dbutils  {
 		function __construct() {		
 		}

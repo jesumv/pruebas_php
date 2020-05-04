@@ -7,14 +7,13 @@
     $funcbase = new dbutils;
 /*** conexion a bd ***/
     $mysqli = $funcbase->conecta();
-	$fechainic = $funcbase->fechainic($mysqli);
     if (is_object($mysqli)) {
 						 //asignacion de variables
-					  $myusername = $_POST['username'];
-					  $mypassword = $_POST['password'];
+					  $myusername = $_REQUEST['username'];
+					  $mypassword = $_REQUEST['password'];
 					  $sql=sprintf("SELECT id,username,empresa,nivel,nombre,email FROM usuarios WHERE username='$myusername' 
 					                and passcode=(AES_ENCRYPT('%s','%s'))",$mypassword,$mypassword);
-					  $result=mysqli_query($mysqli,$sql);
+					  $result=mysqli_query($mysqli,$sql) or die ("ERROR EN CONSULTA DE LOGIN. ".mysqli_error($mysqli));;
 					                $row=mysqli_fetch_array($result);
 					                $usuario = $row[1];
 					                $empre = $row[2];
@@ -33,7 +32,6 @@
 					        $_SESSION['nivel']=$nivel;
 					        $_SESSION['empresa']=$empre;
 							$_SESSION['uemail']=$email;
-							$_SESSION['fechainic']=$fechainic;
 							$_SESSION['root'] = realpath($_SERVER["DOCUMENT_ROOT"]);
 							if($nivel<10){
 								echo "1";

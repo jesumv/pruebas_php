@@ -1,10 +1,7 @@
 <?php
-// function __autoload($class){
-    // require('include/' . strtolower($class) . '.class.php');
-// }
 
 spl_autoload_register(function ($class) {
-    require ('include/' . strtolower($class) . '.class.php');
+    require('include/' . strtolower($class) . '.class.php');
 });
 
 $funcbase = new dbutils;
@@ -12,6 +9,6 @@ $funcbase = new dbutils;
 $mysqli = $funcbase->conecta();
 if (is_object($mysqli)) {
     /*** checa login***/
-    //$funcbase->checalogin($mysqli);}else {
-        //die ("<h1>'No se establecio la conexion a bd'</h1>");
+    $funcbase->checalogin($mysqli);}else {
+        die ("<h1>'No se establecio la conexion a bd'</h1>");
     }

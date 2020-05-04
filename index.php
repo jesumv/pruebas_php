@@ -57,7 +57,6 @@
         	<div> <label>Usuario  :</label><input type="text" name="username" id="username" /></div>
            <div><label>Contraseña :</label><input type="password" name="password" id="password"/></div>
             <div><input type="submit" value=" Enviar "/><br />   </div>      
-      </div>
       <div class="dialog-buttons">
       </div>
       </form>

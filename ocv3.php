@@ -1,4 +1,6 @@
 <?php
+// se intenta una orden de compra para pc, sin las restricciones de tamaño del movil
+// se está estructurando con helpers,templates.
 require_once('include/helpers.php');
 render('conectabd');
 render('headerv2',array('title' => 'REGISTRO DE ORDEN DE COMPRA'));
