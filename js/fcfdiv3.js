@@ -217,14 +217,16 @@ function leeXMLing(texto){
 		var concep;
 		var stotal;
 		var total;
-		var rfc
-		var nombre
-		var nombrea
-		var rfcrecep
-		var nombrerecep
+		var rfc;
+		var nombre;
+		var nombrea;
+		var rfcrecep;
+		var nrecepa;
+		var nombrerecep;
 		var uuid;					 
 		var haydescu = atribcomp.getNamedItem("Descuento");
 		var astotal= atribcomp.getNamedItem("SubTotal").nodeValue;
+		var uso;
 		
 			 //si hay descuento se modifica subtotal
 			 if(haydescu){
@@ -259,7 +261,9 @@ function leeXMLing(texto){
 			 //si no hay nombre, se agrega generico
 			 if(nombrea){nombre = nombrea.nodeValue}else{nombre="SIN NOMBRE"};
 			 rfcrecep =receptor.getNamedItem("Rfc").nodeValue;
-			 nombrerecep =receptor.getNamedItem("Nombre").nodeValue;
+			 nrecepa=receptor.getNamedItem("Nombre");
+			 if(nrecepa){nombrerecep =receptor.getNamedItem("Nombre").nodeValue}else{nombrerecep="SIN DEFINIR"};
+			 uso= receptor.getNamedItem("UsoCFDI").nodeValue;
 			 concepa = concepto.getNamedItem("Descripcion");
 			 concep = concepa.nodeValue
 			 uuid = timbre.getNamedItem("UUID").nodeValue;	
@@ -281,6 +285,7 @@ function leeXMLing(texto){
 						  nombre: nombre,
 						  rfcrecep:rfcrecep,
 						  nombrerecep:nombrerecep,
+						  uso:uso,
 						  uuid:uuid
 				}
 	}
